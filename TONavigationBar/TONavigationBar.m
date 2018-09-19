@@ -21,6 +21,7 @@
 //  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #import "TONavigationBar.h"
+#import "UIColor+Extensions.h"
 
 @interface TONavigationBar ()
 
@@ -39,6 +40,8 @@
 // An internal reference to the content view that holds all of visible subviews of the navigation bar
 @property (nonatomic, weak) UIView *contentView;
 
+- (UIColor *)whiten:(UIColor*)color by:(CGFloat)percentage;
+
 @end
 
 @implementation TONavigationBar
@@ -51,6 +54,7 @@
         _backgroundView = [[UIVisualEffectView alloc] initWithEffect:nil];
         _separatorView = [[UIView alloc] initWithFrame:CGRectZero];
         _separatorHeight = 1.0f / [UIScreen mainScreen].scale;
+        _preferredTintColor = UIColor.redColor;
     }
     return self;
 }
@@ -61,6 +65,7 @@
         _backgroundView = [[UIVisualEffectView alloc] initWithEffect:nil];
         _separatorView = [[UIView alloc] initWithFrame:CGRectZero];
         _separatorHeight = 1.0f / [UIScreen mainScreen].scale;
+        _preferredTintColor = UIColor.redColor;
     }
     
     return self;
@@ -161,6 +166,32 @@
     CGFloat barHeight = CGRectGetHeight(self.frame);
 
     CGFloat offsetHeight = (self.targetScrollView.contentOffset.y - self.scrollViewMinimumOffset) + totalHeight;
+//    NSLog(@"%f", offsetHeight);
+    
+    
+    
+    //  - - - - - - - - - - - - - - - -
+    
+    // a value between 0 and 1 how complete the transition is
+    CGFloat complete = MIN(1 - (-offsetHeight)/136.0, 1);
+    NSLog(@"%f", complete);
+    
+    self.backgroundView.alpha = complete;
+    
+    // Change the tint color once it has passed the middle of the bar
+//    self.tintColor = (offsetHeight > barHeight * 0.5f) ? self.preferredTintColor : [UIColor whiteColor];
+    
+    
+    self.tintColor = [self.preferredTintColor lighterColorWithDelta:(-complete)]; //[self whiten:self.preferredTintColor by:complete * 100];
+    
+    // Change the status bar colour once the offset has reached its midpoint
+    CGFloat statusBarHeight = totalHeight - barHeight;
+    self.barStyle = complete > 0.5 ? self.preferredBarStyle : UIBarStyleBlack;
+    
+    return;
+    
+    //  - - - - - - - - - - - - - - - -
+    
     offsetHeight = MAX(offsetHeight, 0.0f);
     offsetHeight = MIN(offsetHeight, totalHeight);
 
@@ -200,8 +231,28 @@
     self.tintColor = (offsetHeight > barHeight * 0.5f) ? self.preferredTintColor : [UIColor whiteColor];
     
     // Change the status bar colour once the offset has reached its midpoint
-    CGFloat statusBarHeight = totalHeight - barHeight;
+    statusBarHeight = totalHeight - barHeight;
     self.barStyle = (offsetHeight > barHeight + (statusBarHeight * 0.5f)) ? self.preferredBarStyle : UIBarStyleBlack;
+}
+
+- (UIColor *)whiten:(UIColor*)color by:(CGFloat)percentage {
+    
+    CGFloat red = 0, green = 0, blue = 0, alpha = 0;
+    
+    
+    
+    if ([color getRed:&red green:&green blue:&blue alpha:&alpha]) {
+        
+        UIColor *newColor = [[UIColor alloc] initWithRed: MIN(red + percentage/100, 1.0)
+                                                   green: MIN(green + percentage/100, 1.0)
+                                                    blue: MIN(blue + percentage/100, 1.0)
+                                                   alpha: MIN(alpha + percentage/100, 1.0)];
+        
+        return newColor;
+    }
+    else {
+        return nil;
+    }
 }
 
 #pragma mark - KVO Handling -

@@ -52,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return A new instance of `TOHeaderImageView`
  */
 - (instancetype)initWithImage:(UIImage *)image height:(CGFloat)height;
-
+- (instancetype)initWithHeight:(CGFloat)height;
 @end
 
 NS_ASSUME_NONNULL_END

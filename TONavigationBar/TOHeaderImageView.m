@@ -40,7 +40,24 @@
 
 @implementation TOHeaderImageView
 
-#pragma mark - View Creation -
+#pragma mark - View Creation
+
+- (instancetype)initWithHeight:(CGFloat)height
+{
+    CGRect frame = (CGRect){0.0f, 0.0f, 320.0f, height};
+    if (self = [super initWithFrame:frame]) {
+        self.backgroundColor = [UIColor blackColor];
+        self.contentMode = UIViewContentModeScaleAspectFill;
+        
+        _shadowHeight = 100.0f;
+        _shadowHidden = YES;
+        _shadowAlpha = 0.2f;
+        _shadowIsDirty = YES;
+        [self setUpViews];
+    }
+    
+    return self;
+}
 
 - (instancetype)initWithImage:(UIImage *)image height:(CGFloat)height
 {
@@ -61,16 +78,18 @@
 
 - (void)setUpViews
 {
-    self.imageView = [[UIImageView alloc] initWithImage:_image];
-    self.imageView.contentMode = UIViewContentModeScaleAspectFill;
-    self.imageView.clipsToBounds = YES;
-    self.imageView.backgroundColor = [UIColor blackColor];
-    [self addSubview:self.imageView];
-    
-    self.gradientView = [[UIImageView alloc] initWithImage:nil];
-    self.gradientView.layer.magnificationFilter = kCAFilterNearest;
-    self.gradientView.hidden = YES;
-    [self.imageView addSubview:self.gradientView];
+    if (self.imageView == nil) {
+        self.imageView = [[UIImageView alloc] initWithImage:_image];
+        self.imageView.contentMode = UIViewContentModeScaleAspectFill;
+        self.imageView.clipsToBounds = YES;
+        self.imageView.backgroundColor = [UIColor blackColor];
+        [self addSubview:self.imageView];
+        
+        self.gradientView = [[UIImageView alloc] initWithImage:nil];
+        self.gradientView.layer.magnificationFilter = kCAFilterNearest;
+        self.gradientView.hidden = YES;
+        [self.imageView addSubview:self.gradientView];
+    }
 }
 
 #pragma mark - View Lifecycle -
@@ -138,6 +157,7 @@
 - (void)setScrollOffset:(CGFloat)scrollOffset
 {
     if (_scrollOffset == scrollOffset) { return; }
+    
     _scrollOffset = scrollOffset;
     [self setNeedsLayout];
 }
@@ -168,6 +188,20 @@
     _image = image;
     self.imageView.image = image;
 }
+
+/*
+ func adjust(by percentage:CGFloat=30.0) -> UIColor? {
+    var r:CGFloat=0, g:CGFloat=0, b:CGFloat=0, a:CGFloat=0;
+     if(self.getRed(&r, green: &g, blue: &b, alpha: &a)){
+        return UIColor(red: min(r + percentage/100, 1.0),
+        green: min(g + percentage/100, 1.0),
+        blue: min(b + percentage/100, 1.0),
+        alpha: a)
+     }else{
+     return nil
+     }
+ }
+ */
 
 #pragma mark - Image Generation -
 
