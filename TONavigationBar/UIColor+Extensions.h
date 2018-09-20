@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface UIColor (Extensions)
 
-- (UIColor *)lighterColorWithDelta:(CGFloat)delta;
+- (UIColor *)desaturateBy:(CGFloat)delta;
 
 @end
 

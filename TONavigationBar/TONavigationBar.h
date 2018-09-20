@@ -30,11 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** Sets whether the bar background and title label are hidden, and the tint color is white. */
 @property (nonatomic, assign) BOOL backgroundHidden;
 
-
-/** Since this view internally controls `tintColor`, set this property if you wish to override
- the bar's tint color to something different than the system default when the bar is not hidden. */
-@property (nonatomic, strong, nullable) UIColor *preferredTintColor;
-
+/** The color which we'll want the Back button to be when it's overlaying the UINavigationBar. Defaults to UIWindow's tint color */
+@property (nonatomic, strong, nullable) UIColor *backButtonOverlayingNavigationBarTintColor;
 
 /** By default, when the bar is not hidden, the bar style is default. Use this property
  to override the bar style when not hidden. */

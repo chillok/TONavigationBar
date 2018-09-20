@@ -10,17 +10,21 @@
 
 @implementation UIColor (Extensions)
 
-- (UIColor *)lighterColorWithDelta:(CGFloat)delta {
+- (UIColor *)desaturateBy:(CGFloat)delta {
     
-    CGFloat r, g, b, a;
-    if ([self getRed:&r green:&g blue:&b alpha:&a])
-        return [UIColor colorWithRed:MIN(r + delta, 1.0)
-                               green:MIN(g + delta, 1.0)
-                                blue:MIN(b + delta, 1.0)
-                               alpha:a];
-    return nil;
+    CGFloat hue;
+    CGFloat saturation;
+    CGFloat brightness;
+    CGFloat alpha;
+    
+    if ([self getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha]) {
+        
+        UIColor *newColor = [[UIColor alloc] initWithHue:hue saturation:saturation * delta brightness:brightness alpha:alpha];
+        
+        return newColor;
+    }
+    
+    return self;
 }
-
-
 
 @end

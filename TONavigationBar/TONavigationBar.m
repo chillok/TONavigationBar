@@ -34,13 +34,14 @@
 // The height of the separator, calculated once for efficiency
 @property (nonatomic, assign) CGFloat separatorHeight;
 
+/** The color when the Back button is overlaying an image */
+@property (nonatomic, strong, nullable) UIColor *backButtonOverlayingBackgroundTintColor;
+
 // Fetch a reference to the title label so we can control it
 @property (nonatomic, readonly) UILabel *titleTextLabel;
 
 // An internal reference to the content view that holds all of visible subviews of the navigation bar
 @property (nonatomic, weak) UIView *contentView;
-
-- (UIColor *)whiten:(UIColor*)color by:(CGFloat)percentage;
 
 @end
 
@@ -51,10 +52,7 @@
 - (instancetype)initWithCoder:(NSCoder *)coder
 {
     if (self = [super initWithCoder:coder]) {
-        _backgroundView = [[UIVisualEffectView alloc] initWithEffect:nil];
-        _separatorView = [[UIView alloc] initWithFrame:CGRectZero];
-        _separatorHeight = 1.0f / [UIScreen mainScreen].scale;
-        _preferredTintColor = UIColor.redColor;
+        [self setup];
     }
     return self;
 }
@@ -62,13 +60,19 @@
 - (instancetype)initWithFrame:(CGRect)frame
 {
     if (self = [super initWithFrame:frame]) {
-        _backgroundView = [[UIVisualEffectView alloc] initWithEffect:nil];
-        _separatorView = [[UIView alloc] initWithFrame:CGRectZero];
-        _separatorHeight = 1.0f / [UIScreen mainScreen].scale;
-        _preferredTintColor = UIColor.redColor;
+        [self setup];
     }
     
     return self;
+}
+
+- (void)setup {
+    _backgroundView = [[UIVisualEffectView alloc] initWithEffect:nil];
+    _separatorView = [[UIView alloc] initWithFrame:CGRectZero];
+    _separatorHeight = 1.0f / [UIScreen mainScreen].scale;
+    _backButtonOverlayingBackgroundTintColor = UIColor.whiteColor;
+    _backButtonOverlayingNavigationBarTintColor = self.tintColor; 
+    self.tintColor = _backButtonOverlayingBackgroundTintColor;
 }
 
 #pragma mark - Subview Handling -
@@ -158,101 +162,24 @@
 
 - (void)updateBackgroundVisibilityForScrollView
 {
+    
     if (self.targetScrollView == nil) {
         return;
     }
 
     CGFloat totalHeight = CGRectGetMaxY(self.frame); // Includes status bar
-    CGFloat barHeight = CGRectGetHeight(self.frame);
 
     CGFloat offsetHeight = (self.targetScrollView.contentOffset.y - self.scrollViewMinimumOffset) + totalHeight;
-//    NSLog(@"%f", offsetHeight);
-    
-    
-    
-    //  - - - - - - - - - - - - - - - -
     
     // a value between 0 and 1 how complete the transition is
-    CGFloat complete = MIN(1 - (-offsetHeight)/136.0, 1);
-    NSLog(@"%f", complete);
+    CGFloat complete = MAX(MIN(1 - (-offsetHeight)/136.0, 1), 0);
     
     self.backgroundView.alpha = complete;
-    
-    // Change the tint color once it has passed the middle of the bar
-//    self.tintColor = (offsetHeight > barHeight * 0.5f) ? self.preferredTintColor : [UIColor whiteColor];
-    
-    
-    self.tintColor = [self.preferredTintColor lighterColorWithDelta:(-complete)]; //[self whiten:self.preferredTintColor by:complete * 100];
+
+    self.tintColor = [self.backButtonOverlayingNavigationBarTintColor desaturateBy:complete];
     
     // Change the status bar colour once the offset has reached its midpoint
-    CGFloat statusBarHeight = totalHeight - barHeight;
     self.barStyle = complete > 0.5 ? self.preferredBarStyle : UIBarStyleBlack;
-    
-    return;
-    
-    //  - - - - - - - - - - - - - - - -
-    
-    offsetHeight = MAX(offsetHeight, 0.0f);
-    offsetHeight = MIN(offsetHeight, totalHeight);
-
-    BOOL barShouldBeVisible = offsetHeight > 0.0f + FLT_EPSILON;
-    
-    // Layout the background view to slide into view
-    CGRect frame = self.backgroundView.frame;
-    if (barShouldBeVisible) {
-        frame.origin.y = barHeight - offsetHeight;
-        frame.size.height = offsetHeight;
-        self.backgroundView.alpha = 1.0f;
-    }
-    else { // If it's hidden, reset it back in preparation of transitions
-        frame.origin.y = -(CGRectGetMinY(self.frame));
-        frame.size.height = CGRectGetMaxY(self.frame);
-        self.backgroundView.alpha = 0.0f;
-    }
-    self.backgroundView.frame = frame;
-    
-    // Change alpha of the separator
-    self.separatorView.alpha = MAX(0.0f, offsetHeight / (barHeight * 0.5f));
-    
-    // Change the alpha of the title label/view
-    BOOL hidden = !barShouldBeVisible;
-    CGFloat alpha = MAX(offsetHeight - (barHeight * 0.75f), 0.0f) / (barHeight * 0.25f);
-    
-    if (self.topItem.titleView) {
-        self.topItem.titleView.hidden = hidden;
-        self.topItem.titleView.alpha = alpha;
-    }
-    else {
-        self.titleTextLabel.hidden = hidden;
-        self.titleTextLabel.alpha = alpha;
-    }
-    
-    // Change the tint color once it has passed the middle of the bar
-    self.tintColor = (offsetHeight > barHeight * 0.5f) ? self.preferredTintColor : [UIColor whiteColor];
-    
-    // Change the status bar colour once the offset has reached its midpoint
-    statusBarHeight = totalHeight - barHeight;
-    self.barStyle = (offsetHeight > barHeight + (statusBarHeight * 0.5f)) ? self.preferredBarStyle : UIBarStyleBlack;
-}
-
-- (UIColor *)whiten:(UIColor*)color by:(CGFloat)percentage {
-    
-    CGFloat red = 0, green = 0, blue = 0, alpha = 0;
-    
-    
-    
-    if ([color getRed:&red green:&green blue:&blue alpha:&alpha]) {
-        
-        UIColor *newColor = [[UIColor alloc] initWithRed: MIN(red + percentage/100, 1.0)
-                                                   green: MIN(green + percentage/100, 1.0)
-                                                    blue: MIN(blue + percentage/100, 1.0)
-                                                   alpha: MIN(alpha + percentage/100, 1.0)];
-        
-        return newColor;
-    }
-    else {
-        return nil;
-    }
 }
 
 #pragma mark - KVO Handling -
